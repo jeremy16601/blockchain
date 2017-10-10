@@ -1,17 +1,15 @@
 package com.blockchain.robot.service;
 
 import com.blockchain.robot.entity.MarketDepth;
-import com.blockchain.robot.entity.NewOrder;
-import com.blockchain.robot.entity.ParamOrder;
 import com.blockchain.robot.entity.TwentyFourHoursPrice;
 import com.blockchain.robot.util.FeignConfiguration;
-import feign.Headers;
 import org.springframework.cloud.netflix.feign.FeignClient;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
-import java.util.Map;
 
 @FeignClient(name = "binance", url = "https://www.binance.com", configuration = FeignConfiguration.class)
 public interface BinanceAPIService {
