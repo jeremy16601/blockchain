@@ -1,4 +1,4 @@
-package com.blockchain.robot.entity;
+package com.blockchain.robot.entity.binance;
 
 /**
  * 下订单 返回的信息

@@ -1,8 +1,8 @@
 package com.blockchain.robot.controller;
 
-import com.blockchain.robot.entity.BuyPoint;
-import com.blockchain.robot.entity.ParamOrder;
-import com.blockchain.robot.entity.TwentyFourHoursPrice;
+import com.blockchain.robot.entity.binance.BuyPoint;
+import com.blockchain.robot.entity.binance.ParamOrder;
+import com.blockchain.robot.entity.binance.TwentyFourHoursPrice;
 import com.blockchain.robot.service.BinanceAPIService;
 import com.blockchain.robot.util.SHA256;
 import org.springframework.beans.factory.annotation.Autowired;

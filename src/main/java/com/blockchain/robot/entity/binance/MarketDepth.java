@@ -1,4 +1,4 @@
-package com.blockchain.robot.entity;
+package com.blockchain.robot.entity.binance;
 
 import java.util.List;
 

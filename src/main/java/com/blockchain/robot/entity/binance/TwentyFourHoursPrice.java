@@ -1,4 +1,4 @@
-package com.blockchain.robot.entity;
+package com.blockchain.robot.entity.binance;
 
 /**
  * 24小时价格统计信息

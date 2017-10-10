@@ -1,4 +1,4 @@
-package com.blockchain.robot.entity;
+package com.blockchain.robot.entity.binance;
 
 /**
  * 创建订单 参数

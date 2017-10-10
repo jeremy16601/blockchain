@@ -1,7 +1,7 @@
 package com.blockchain.robot.service;
 
-import com.blockchain.robot.entity.MarketDepth;
-import com.blockchain.robot.entity.TwentyFourHoursPrice;
+import com.blockchain.robot.entity.binance.MarketDepth;
+import com.blockchain.robot.entity.binance.TwentyFourHoursPrice;
 import com.blockchain.robot.util.FeignConfiguration;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.web.bind.annotation.RequestHeader;
