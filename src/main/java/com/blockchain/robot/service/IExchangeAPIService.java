@@ -3,6 +3,7 @@ package com.blockchain.robot.service;
 
 import com.blockchain.robot.entity.Account;
 import com.blockchain.robot.entity.Order;
+import com.blockchain.robot.entity.Record;
 import com.blockchain.robot.entity.Ticker;
 
 import java.util.List;
@@ -21,8 +22,16 @@ public interface IExchangeAPIService {
      *
      * @return Ticker
      */
-    Ticker GetTicker();
+    Ticker getTicker();
 
+
+    /**
+     * K线历史数据
+     *
+     * @param period 时间周期
+     * @param limit  K线数量限制
+     */
+    List<Record> getRecords(String period, int limit);
 
     /**
      * 返回一个Account结构
@@ -70,5 +79,13 @@ public interface IExchangeAPIService {
      * @return 返回true或者false
      */
     boolean cancelOrder(String orderId);
+
+
+    /**
+     * 当前交易所 BTC 人民币价格
+     *
+     * @return CNY
+     */
+    double btc_cnyPrice();
 
 }

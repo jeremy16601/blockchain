@@ -5,18 +5,18 @@ package com.blockchain.robot.entity;
  */
 public class Record {
 
-    private double time;//一个时间戳, 精确到毫秒
+    private long time;//一个时间戳, 精确到毫秒
     private double open;//开盘价
     private double high;//最高价
     private double low;//最低价
     private double close;//收盘价
     private double volume;//交易量
 
-    public double getTime() {
+    public long getTime() {
         return time;
     }
 
-    public void setTime(double time) {
+    public void setTime(long time) {
         this.time = time;
     }
 

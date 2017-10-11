@@ -2,46 +2,25 @@ package com.blockchain.robot.service;
 
 import com.blockchain.robot.entity.Account;
 import com.blockchain.robot.entity.Order;
+import com.blockchain.robot.entity.Record;
 import com.blockchain.robot.entity.Ticker;
-import com.blockchain.robot.entity.binance.TwentyFourHoursPrice;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
-public class ExchangeAPIService implements IExchangeAPIService {
-
-    @Autowired
-    private BinanceAPIService binanceAPIService;
-    //TODO 可以添加其他交易所的API
-
-
+public class BigOneExchangeService implements IExchangeAPIService{
     @Override
     public String getName() {
-        return "binance";
+        return null;
     }
 
     @Override
-    public Ticker GetTicker() {
+    public Ticker getTicker() {
+        return null;
+    }
 
-        TwentyFourHoursPrice hoursPrice = binanceAPIService.price_statistics_24hr("BNBBTC");
-
-        Ticker ticker = new Ticker();
-        try {
-            double lastPrice = Double.parseDouble(hoursPrice.getLastPrice());
-            ticker.setLast(lastPrice);
-
-
-
-
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
-        return ticker;
+    @Override
+    public List<Record> getRecords(String period, int limit) {
+        return null;
     }
 
     @Override
@@ -72,5 +51,10 @@ public class ExchangeAPIService implements IExchangeAPIService {
     @Override
     public boolean cancelOrder(String orderId) {
         return false;
+    }
+
+    @Override
+    public double btc_cnyPrice() {
+        return 0;
     }
 }
