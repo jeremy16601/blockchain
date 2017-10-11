@@ -32,7 +32,7 @@ public class BinanceExchangeService implements IExchangeAPIService {
     private String api_secret;
 
     //TODO 后期提出来
-    private String symbol = "BNBBTC";
+    private String symbol = "SNMBTC";
 
     @Override
     public String getName() {
