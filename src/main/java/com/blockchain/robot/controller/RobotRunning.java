@@ -166,7 +166,7 @@ public class RobotRunning {
     int amount = 1000;
     double earnings = 0;
 
-    int timeMinus = 0;
+    Calendar calendar = Calendar.getInstance();
     boolean tagBuy = false;
     boolean tagSell = false;
 
@@ -176,9 +176,9 @@ public class RobotRunning {
     @Scheduled(cron = "0/2 * * * * ?")
     private void waitForWindfalls() {
 
-        timeMinus++;
-        if (timeMinus == 30) {
-            timeMinus = 0;
+        calendar.setTime(new Date(System.currentTimeMillis()));
+        int second = calendar.get(Calendar.SECOND);
+        if (second == 0) {
             tagBuy = false;
             tagSell = false;
         }
