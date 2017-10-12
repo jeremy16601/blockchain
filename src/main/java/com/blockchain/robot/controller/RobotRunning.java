@@ -155,22 +155,24 @@ public class RobotRunning {
 //                logger.info("未卖出价格"+String.format("%.8f", aDouble));
 //            }
 //        }
-////        logger.info("开盘价格：" + String.format("%.8f", openPrice) + "最新价格：" + String.format("%.8f", currentPrice)
-////                + (rate >= 1 ? "涨幅" : "跌幅") + Math.abs((1 - rate) * 100)
-////        );
+//
 //
 //    }
 
     List<Double> buyPrice = new ArrayList<>();
-    int amount = 50;
+    int amount = 5;
     double earnings = 0;
 
     Calendar calendar = Calendar.getInstance();
     boolean tagBuy = false;
-    boolean tagSell = false;
 
     /**
      * 守株待兔
+     * //TODO
+     * 问题 和服务器时间差的问题
+     * 一分钟交易次数太少，下单后不能立刻成交，偶尔能成交
+     * 限制buyPrice的上限，不能一直买下去
+     * 解决下单返回值的bug
      */
     @Scheduled(cron = "0/2 * * * * ?")
     private void waitForWindfalls() {
@@ -179,7 +181,6 @@ public class RobotRunning {
         int second = calendar.get(Calendar.SECOND);
         if (second == 0) {
             tagBuy = false;
-            tagSell = false;
         }
 
         List<Record> recordList = exchange.getRecords("1m", 3);
@@ -189,18 +190,18 @@ public class RobotRunning {
         double currentPrice = record.getClose();
         double openPrice = record.getOpen();
 
+        logger.info("时间" + sdf.format(new Date(record.getTime())) + "最新价格" + PriceFormatUtil.format(currentPrice) + "开盘价" + PriceFormatUtil.format(openPrice));
+
         //买入操作
         double rate = currentPrice / openPrice;
         if (rate < 1) {
             double range = (1 - rate) * 100;
-            if (range >= 1.3) {
+            if (range >= 0.7) {
 
                 if (!tagBuy) {
                     tagBuy = true;
-
-                    exchange.buy(currentPrice, amount);
-
                     buyPrice.add(currentPrice);
+                    exchange.buy(currentPrice, amount);
                     logger.info("时间" + sdf.format(new Date(record.getTime())) + "买入价格" + String.format("%.8f", currentPrice) + "交易量" + record.getVolume());
                 }
             }
@@ -210,25 +211,18 @@ public class RobotRunning {
         Iterator<Double> iterator = buyPrice.iterator();
         while (iterator.hasNext()) {
             Double price = iterator.next();
-            if (currentPrice >= price * 1.013) {
+            logger.info("应该卖出价格" + PriceFormatUtil.format(price * 1.07d));
+            if (currentPrice >= price * 1.007d) {
 
-                if (!tagSell) {
-                    tagSell = true;
-                    iterator.remove();
+                iterator.remove();
+                exchange.sell(currentPrice, amount);
+                earnings += (record.getVolume() > amount ? amount : record.getVolume()) * price * 0.013;
+                logger.info("时间" + sdf.format(new Date(record.getTime())) + "卖出价格" + String.format("%.8f", currentPrice) + "交易量" + record.getVolume() + "总收益" + String.format("%.8f", earnings));
 
-                    exchange.sell(currentPrice, amount);
-
-                    earnings += (record.getVolume() > amount ? amount : record.getVolume()) * price * 0.013;
-                    logger.info("时间" + sdf.format(new Date(record.getTime())) + "卖出价格" + String.format("%.8f", currentPrice) + "交易量" + record.getVolume() + "总收益" + String.format("%.8f", earnings));
-                }
             }
         }
 
     }
-
-//        logger.info("开盘价格：" + String.format("%.8f", openPrice) + "最新价格：" + String.format("%.8f", currentPrice)
-//                + (rate >= 1 ? "涨幅" : "跌幅") + Math.abs((1 - rate) * 100)
-//        );
 
 
 }
