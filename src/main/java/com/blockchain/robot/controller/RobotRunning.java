@@ -106,9 +106,8 @@ public class RobotRunning {
 
 
     /**
-     * 守株待兔
+     * 守株待兔测试
      */
-//    @Scheduled(cron = "0/5 * * * * ?")
 //    @Scheduled(fixedRate = 360000)
 //    private void waitForWindfallsTest() {
 //
@@ -163,7 +162,7 @@ public class RobotRunning {
 //    }
 
     List<Double> buyPrice = new ArrayList<>();
-    int amount = 1000;
+    int amount = 50;
     double earnings = 0;
 
     Calendar calendar = Calendar.getInstance();
@@ -198,6 +197,9 @@ public class RobotRunning {
 
                 if (!tagBuy) {
                     tagBuy = true;
+
+                    exchange.buy(currentPrice, amount);
+
                     buyPrice.add(currentPrice);
                     logger.info("时间" + sdf.format(new Date(record.getTime())) + "买入价格" + String.format("%.8f", currentPrice) + "交易量" + record.getVolume());
                 }
@@ -213,6 +215,9 @@ public class RobotRunning {
                 if (!tagSell) {
                     tagSell = true;
                     iterator.remove();
+
+                    exchange.sell(currentPrice, amount);
+
                     earnings += (record.getVolume() > amount ? amount : record.getVolume()) * price * 0.013;
                     logger.info("时间" + sdf.format(new Date(record.getTime())) + "卖出价格" + String.format("%.8f", currentPrice) + "交易量" + record.getVolume() + "总收益" + String.format("%.8f", earnings));
                 }
