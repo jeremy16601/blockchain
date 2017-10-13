@@ -13,7 +13,7 @@ public class NewOrder {
      */
 
     private String symbol;
-    private long orderId;
+    private String orderId;
     private String clientOrderId;
     private long transactTime;
 
@@ -25,15 +25,11 @@ public class NewOrder {
         this.symbol = symbol;
     }
 
-    public long getOrderId() {
+    public String getOrderId() {
         return orderId;
     }
 
-    public void setOrderId(long orderId) {
-        this.orderId = orderId;
-    }
-
-    public void setOrderId(int orderId) {
+    public void setOrderId(String orderId) {
         this.orderId = orderId;
     }
 

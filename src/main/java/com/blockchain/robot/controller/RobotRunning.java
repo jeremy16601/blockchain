@@ -160,7 +160,7 @@ public class RobotRunning {
 //    }
 
     List<Double> buyPrice = new ArrayList<>();
-    int amount = 5;
+    int amount = 10;
     double earnings = 0;
 
     Calendar calendar = Calendar.getInstance();
@@ -190,29 +190,34 @@ public class RobotRunning {
         double currentPrice = record.getClose();
         double openPrice = record.getOpen();
 
-        logger.info("时间" + sdf.format(new Date(record.getTime())) + "最新价格" + PriceFormatUtil.format(currentPrice) + "开盘价" + PriceFormatUtil.format(openPrice));
+        //logger.info("时间" + sdf.format(new Date(record.getTime())) + "最新价格" + PriceFormatUtil.format(currentPrice) + "开盘价" + PriceFormatUtil.format(openPrice));
 
-        //买入操作
-        double rate = currentPrice / openPrice;
-        if (rate < 1) {
-            double range = (1 - rate) * 100;
-            if (range >= 0.7) {
 
-                if (!tagBuy) {
-                    tagBuy = true;
-                    buyPrice.add(currentPrice);
-                    exchange.buy(currentPrice, amount);
-                    logger.info("时间" + sdf.format(new Date(record.getTime())) + "买入价格" + String.format("%.8f", currentPrice) + "交易量" + record.getVolume());
+        //如果未卖出的订单 多余5个 则停止买入
+        if (buyPrice.size() <= 5) {
+            //买入操作
+            double rate = currentPrice / openPrice;
+            if (rate < 1) {
+                double range = (1 - rate) * 100;
+                if (range >= 1.3) {
+
+                    if (!tagBuy) {
+                        tagBuy = true;
+                        buyPrice.add(currentPrice);
+                        exchange.buy(currentPrice, amount);
+                        logger.info("时间" + sdf.format(new Date(record.getTime())) + "买入价格" + String.format("%.8f", currentPrice) + "交易量" + record.getVolume());
+                    }
                 }
             }
         }
+
 
         //卖出操作
         Iterator<Double> iterator = buyPrice.iterator();
         while (iterator.hasNext()) {
             Double price = iterator.next();
-            logger.info("应该卖出价格" + PriceFormatUtil.format(price * 1.07d));
-            if (currentPrice >= price * 1.007d) {
+
+            if (currentPrice >= price * 1.013) {
 
                 iterator.remove();
                 exchange.sell(currentPrice, amount);

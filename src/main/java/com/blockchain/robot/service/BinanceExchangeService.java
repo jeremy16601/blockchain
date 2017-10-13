@@ -118,7 +118,7 @@ public class BinanceExchangeService implements IExchangeAPIService {
                 param.getSignature());
 
 
-        return order.getOrderId() + "";
+        return order.getOrderId();
     }
 
     @Override
@@ -149,7 +149,7 @@ public class BinanceExchangeService implements IExchangeAPIService {
                 param.getTimestamp(),
                 param.getSignature());
 
-        return order.getOrderId() + "";
+        return order.getOrderId();
     }
 
     @Override
