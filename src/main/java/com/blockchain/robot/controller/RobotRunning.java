@@ -160,7 +160,7 @@ public class RobotRunning {
 //    }
 
     List<Double> buyPrice = new ArrayList<>();
-    int amount = 10;
+    int amount = 50;
     double earnings = 0;
 
     Calendar calendar = Calendar.getInstance();
@@ -199,7 +199,7 @@ public class RobotRunning {
             double rate = currentPrice / openPrice;
             if (rate < 1) {
                 double range = (1 - rate) * 100;
-                if (range >= 1.3) {
+                if (range >= 1.1) {
 
                     if (!tagBuy) {
                         tagBuy = true;
@@ -217,11 +217,11 @@ public class RobotRunning {
         while (iterator.hasNext()) {
             Double price = iterator.next();
 
-            if (currentPrice >= price * 1.013) {
+            if (currentPrice >= price * 1.011) {
 
                 iterator.remove();
                 exchange.sell(currentPrice, amount);
-                earnings += (record.getVolume() > amount ? amount : record.getVolume()) * price * 0.013;
+                earnings += (record.getVolume() > amount ? amount : record.getVolume()) * price * 0.011;
                 logger.info("时间" + sdf.format(new Date(record.getTime())) + "卖出价格" + String.format("%.8f", currentPrice) + "交易量" + record.getVolume() + "总收益" + String.format("%.8f", earnings));
 
             }
