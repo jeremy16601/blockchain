@@ -1,13 +1,9 @@
 package com.blockchain.robot.controller;
 
-import com.blockchain.robot.entity.Record;
 import com.blockchain.robot.entity.Ticker;
 import com.blockchain.robot.entity.binance.BuyPoint;
-import com.blockchain.robot.entity.binance.ParamOrder;
-import com.blockchain.robot.entity.binance.TwentyFourHoursPrice;
 import com.blockchain.robot.service.IExchangeAPIService;
-import com.blockchain.robot.util.PriceFormatUtil;
-import com.blockchain.robot.util.SHA256;
+import com.blockchain.robot.strategy.IStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,16 +11,25 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 @Component
 public class RobotRunning {
 
+    //1.定义交易所（可以多个）
     @Autowired
     @Qualifier("binanceExchangeService")
-    private IExchangeAPIService exchange;
+    private IExchangeAPIService binanceExchange;
+
+    //2.定义策略（可以多个，可重复定义）
+    @Autowired
+    @Qualifier("waitForWindfalls")
+    private IStrategy waitForWindfalls;
+
+
+    public RobotRunning() {
+        waitForWindfalls.setExchange(binanceExchange);
+    }
 
     private Stack<BuyPoint> buyPointStack = new Stack<>();
     private Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -32,7 +37,7 @@ public class RobotRunning {
 
     //    @Scheduled(fixedRate = 5000)
     private void BTCPrice() {
-        btc_price = exchange.btc_cnyPrice();
+        btc_price = binanceExchange.btc_cnyPrice();
     }
 
     //    @Scheduled(fixedRate = 10000)
@@ -43,7 +48,7 @@ public class RobotRunning {
         double amount = 100;
         String symbol = "NEOBTC";
 
-        Ticker ticker = exchange.getTicker();
+        Ticker ticker = binanceExchange.getTicker();
 
         try {
 
@@ -56,7 +61,7 @@ public class RobotRunning {
 
                 if (CPoint <= GPoint * (1 - base_rate)) {//95%买入
                     buyPointStack.push(new BuyPoint(HPoint, LPoint, CPoint, GPoint));
-                    exchange.buy(CPoint, amount);
+                    binanceExchange.buy(CPoint, amount);
 
                     out += "\n==买入操作C:" + String.format("%.8f", CPoint) + "G:" + String.format("%.8f", GPoint);
                 } else {
@@ -74,7 +79,7 @@ public class RobotRunning {
 
                 if (CPoint <= point2 && CPoint <= point1 && CPoint <= point3) {
                     buyPointStack.push(new BuyPoint(HPoint, LPoint, CPoint, GPoint));
-                    exchange.buy(CPoint, amount);
+                    binanceExchange.buy(CPoint, amount);
                     out += "\n==第" + (count + 1) + "买入操作C:" + String.format("%.8f", CPoint) + "G:" + String.format("%.8f", GPoint);
                 } else {
                     out += "\n**不是买入点,买入点是:" + String.format("%.8f", Math.min(Math.min(point1, point2), point3));
@@ -88,7 +93,7 @@ public class RobotRunning {
                 BuyPoint topBuyPoint = buyPointStack.peek();
                 if (CPoint >= topBuyPoint.getcPoint() * (1 + base_rate)) {
                     out += "\n==卖出操作，买入点" + topBuyPoint.getcPoint() + "卖出点" + CPoint;
-                    exchange.sell(CPoint, amount);
+                    binanceExchange.sell(CPoint, amount);
                     buyPointStack.pop();
                 } else {
                     out += "\n**不是卖出点,卖出点是：" + String.format("%.8f", topBuyPoint.getcPoint() * (1 + base_rate));
@@ -111,7 +116,7 @@ public class RobotRunning {
 //    @Scheduled(fixedRate = 360000)
 //    private void waitForWindfallsTest() {
 //
-//        List<Record> recordList = exchange.getRecords("1m", 500);
+//        List<Record> recordList = binanceExchange.getRecords("1m", 500);
 //        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 //        int amount = 1000;
 //        double earnings = 0;
@@ -159,74 +164,14 @@ public class RobotRunning {
 //
 //    }
 
-    List<Double> buyPrice = new ArrayList<>();
-    int amount = 50;
-    double earnings = 0;
 
-    Calendar calendar = Calendar.getInstance();
-    boolean tagBuy = false;
 
     /**
      * 守株待兔
-     * //TODO
-     * 问题 和服务器时间差的问题
-     * 一分钟交易次数太少，下单后不能立刻成交，偶尔能成交
-     * 限制buyPrice的上限，不能一直买下去
-     * 解决下单返回值的bug
      */
     @Scheduled(cron = "0/2 * * * * ?")
     private void waitForWindfalls() {
-
-        calendar.setTime(new Date(System.currentTimeMillis()));
-        int second = calendar.get(Calendar.SECOND);
-        if (second == 0) {
-            tagBuy = false;
-        }
-
-        List<Record> recordList = exchange.getRecords("1m", 3);
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
-        Record record = recordList.get(2);
-        double currentPrice = record.getClose();
-        double openPrice = record.getOpen();
-
-        //logger.info("时间" + sdf.format(new Date(record.getTime())) + "最新价格" + PriceFormatUtil.format(currentPrice) + "开盘价" + PriceFormatUtil.format(openPrice));
-
-
-        //如果未卖出的订单 多余5个 则停止买入
-        if (buyPrice.size() <= 5) {
-            //买入操作
-            double rate = currentPrice / openPrice;
-            if (rate < 1) {
-                double range = (1 - rate) * 100;
-                if (range >= 1.1) {
-
-                    if (!tagBuy) {
-                        tagBuy = true;
-                        buyPrice.add(currentPrice);
-                        exchange.buy(currentPrice, amount);
-                        logger.info("时间" + sdf.format(new Date(record.getTime())) + "买入价格" + String.format("%.8f", currentPrice) + "交易量" + record.getVolume());
-                    }
-                }
-            }
-        }
-
-
-        //卖出操作
-        Iterator<Double> iterator = buyPrice.iterator();
-        while (iterator.hasNext()) {
-            Double price = iterator.next();
-
-            if (currentPrice >= price * 1.011) {
-
-                iterator.remove();
-                exchange.sell(currentPrice, amount);
-                earnings += (record.getVolume() > amount ? amount : record.getVolume()) * price * 0.011;
-                logger.info("时间" + sdf.format(new Date(record.getTime())) + "卖出价格" + String.format("%.8f", currentPrice) + "交易量" + record.getVolume() + "总收益" + String.format("%.8f", earnings));
-
-            }
-        }
-
+        waitForWindfalls.onExec();
     }
 
 
