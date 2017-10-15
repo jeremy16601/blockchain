@@ -1,4 +1,4 @@
-package com.blockchain.robot.service;
+package com.blockchain.robot.service.api;
 
 import com.blockchain.robot.entity.DingMessage;
 import com.blockchain.robot.util.FeignConfiguration;

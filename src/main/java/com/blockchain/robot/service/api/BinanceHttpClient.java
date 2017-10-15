@@ -1,7 +1,8 @@
-package com.blockchain.robot.service;
+package com.blockchain.robot.service.api;
 
 import com.blockchain.robot.entity.binance.MarketDepth;
 import com.blockchain.robot.entity.binance.NewOrder;
+import com.blockchain.robot.entity.binance.OrderDetail;
 import com.blockchain.robot.entity.binance.TwentyFourHoursPrice;
 import com.blockchain.robot.util.FeignConfiguration;
 import org.springframework.cloud.netflix.feign.FeignClient;
@@ -68,7 +69,7 @@ public interface BinanceHttpClient {
     /**
      * 下单(BUY SELL)
      */
-    @RequestMapping(value = "/api/v3/order", method = RequestMethod.POST, headers = {"Content-Type=application/x-www-form-urlencoded"})
+    @RequestMapping(value = "/api/v3/order/test", method = RequestMethod.POST, headers = {"Content-Type=application/x-www-form-urlencoded"})
     NewOrder new_order(@RequestHeader(value = "X-MBX-APIKEY") String api_key,
                        @RequestParam("symbol") String symbol,
                        @RequestParam("side") String side,
@@ -80,5 +81,10 @@ public interface BinanceHttpClient {
                        @RequestParam("timestamp") long timestamp,
                        @RequestParam("signature") String signature);
 
+    /**
+     * 查询某个订单状态
+     */
+    @RequestMapping(value = "/api/v3/order", method = RequestMethod.GET)
+    OrderDetail order_info(@RequestParam("symbol") String symbol, @RequestParam("orderId") String orderId, @RequestParam("timestamp") long timestamp);
 
 }

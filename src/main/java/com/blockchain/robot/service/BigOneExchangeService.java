@@ -19,6 +19,16 @@ public class BigOneExchangeService implements IExchangeAPIService{
     }
 
     @Override
+    public void setSymbol(String symbol) {
+
+    }
+
+    @Override
+    public String getSymbol() {
+        return null;
+    }
+
+    @Override
     public List<Record> getRecords(String period, int limit) {
         return null;
     }

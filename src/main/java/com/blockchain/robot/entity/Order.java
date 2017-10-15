@@ -5,67 +5,67 @@ package com.blockchain.robot.entity;
  */
 public class Order {
 
-    private String Info;        //交易所返回的原始结构
-    private String Id;          //交易单唯一标识
-    private double Price;       //	下单价格
-    private double Amount;      //下单数量
-    private double DealAmount;  //成交数量
-    private int Status;         //订单状态, 参考常量里的订单状态
-    private int Type;           //订单类型, 参考常量里的订单类型
+    private String info;        //交易所返回的原始结构
+    private String id;          //交易单唯一标识
+    private double price;       //	下单价格
+    private double amount;      //下单数量
+    private double dealAmount;  //成交数量
+    private OrderStatus status;         //订单状态, 参考常量里的订单状态
+    private int type;           //订单类型, 参考常量里的订单类型
 
     public String getInfo() {
-        return Info;
+        return info;
     }
 
     public void setInfo(String info) {
-        Info = info;
+        this.info = info;
     }
 
     public String getId() {
-        return Id;
+        return id;
     }
 
     public void setId(String id) {
-        Id = id;
+        this.id = id;
     }
 
     public double getPrice() {
-        return Price;
+        return price;
     }
 
     public void setPrice(double price) {
-        Price = price;
+        this.price = price;
     }
 
     public double getAmount() {
-        return Amount;
+        return amount;
     }
 
     public void setAmount(double amount) {
-        Amount = amount;
+        this.amount = amount;
     }
 
     public double getDealAmount() {
-        return DealAmount;
+        return dealAmount;
     }
 
     public void setDealAmount(double dealAmount) {
-        DealAmount = dealAmount;
+        this.dealAmount = dealAmount;
     }
 
-    public int getStatus() {
-        return Status;
+    public OrderStatus getStatus() {
+        return status;
     }
 
-    public void setStatus(int status) {
-        Status = status;
+    public void setStatus(OrderStatus status) {
+        this.status = status;
     }
 
     public int getType() {
-        return Type;
+        return type;
     }
 
     public void setType(int type) {
-        Type = type;
+        this.type = type;
     }
 }

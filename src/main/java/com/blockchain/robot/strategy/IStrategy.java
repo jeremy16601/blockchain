@@ -8,6 +8,8 @@ public interface IStrategy {
 
     void setExchange(IExchangeAPIService exchangeAPIService);
 
+    void config(double... params);
+
     void onExec();
 
 }

@@ -1,4 +1,4 @@
-package com.blockchain.robot.service;
+package com.blockchain.robot.service.api;
 
 public interface BigOneHttpClient {
 }

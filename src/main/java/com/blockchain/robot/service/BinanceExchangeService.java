@@ -1,19 +1,16 @@
 package com.blockchain.robot.service;
 
-import com.blockchain.robot.entity.Account;
-import com.blockchain.robot.entity.Order;
-import com.blockchain.robot.entity.Record;
-import com.blockchain.robot.entity.Ticker;
+import com.blockchain.robot.entity.*;
 import com.blockchain.robot.entity.binance.NewOrder;
+import com.blockchain.robot.entity.binance.OrderDetail;
 import com.blockchain.robot.entity.binance.ParamOrder;
 import com.blockchain.robot.entity.binance.TwentyFourHoursPrice;
+import com.blockchain.robot.service.api.BinanceHttpClient;
 import com.blockchain.robot.util.SHA256;
-import com.sun.org.apache.regexp.internal.RE;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
-import sun.rmi.runtime.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,8 +28,7 @@ public class BinanceExchangeService implements IExchangeAPIService {
     @Value("${binance.api_secrect}")
     private String api_secret;
 
-    //TODO 后期提出来
-    private String symbol = "BNBBTC";
+    private String symbol = null;
 
     @Override
     public String getName() {
@@ -65,19 +61,32 @@ public class BinanceExchangeService implements IExchangeAPIService {
     }
 
     @Override
+    public void setSymbol(String symbol) {
+        this.symbol = symbol;
+    }
+
+    @Override
+    public String getSymbol() {
+        return symbol;
+    }
+
+    @Override
     public List<Record> getRecords(String period, int limit) {
-        List<List<String>> kLines = binanceAPIService.kline(symbol, period, limit);
         List<Record> recordList = new ArrayList<>();
 
-        for (List<String> kline : kLines) {
-            Record record = new Record();
-            record.setTime(Long.parseLong(kline.get(0)));
-            record.setOpen(Double.parseDouble(kline.get(1)));
-            record.setHigh(Double.parseDouble(kline.get(2)));
-            record.setLow(Double.parseDouble(kline.get(3)));
-            record.setClose(Double.parseDouble(kline.get(4)));
-            record.setVolume(Double.parseDouble(kline.get(5)));
-            recordList.add(record);
+        if (symbol != null) {
+            List<List<String>> kLines = binanceAPIService.kline(symbol, period, limit);
+
+            for (List<String> kline : kLines) {
+                Record record = new Record();
+                record.setTime(Long.parseLong(kline.get(0)));
+                record.setOpen(Double.parseDouble(kline.get(1)));
+                record.setHigh(Double.parseDouble(kline.get(2)));
+                record.setLow(Double.parseDouble(kline.get(3)));
+                record.setClose(Double.parseDouble(kline.get(4)));
+                record.setVolume(Double.parseDouble(kline.get(5)));
+                recordList.add(record);
+            }
         }
 
         return recordList;
@@ -90,6 +99,10 @@ public class BinanceExchangeService implements IExchangeAPIService {
 
     @Override
     public String buy(double price, double amount) {
+
+        if (symbol == null) {
+            return null;
+        }
 
         long time = System.currentTimeMillis();
 
@@ -117,12 +130,16 @@ public class BinanceExchangeService implements IExchangeAPIService {
                 param.getTimestamp(),
                 param.getSignature());
 
-
         return order.getOrderId();
+
     }
 
     @Override
     public String sell(double price, double amount) {
+
+        if (symbol == null) {
+            return null;
+        }
 
         long time = System.currentTimeMillis();
         ParamOrder param = new ParamOrder();
@@ -159,7 +176,32 @@ public class BinanceExchangeService implements IExchangeAPIService {
 
     @Override
     public Order getOrder(String orderId) {
-        return null;
+
+        long time = System.currentTimeMillis();
+        OrderDetail orderDetail = binanceAPIService.order_info(symbol, orderId, time);
+
+        Order order = new Order();
+        order.setId(orderId);
+        order.setPrice(Double.parseDouble(orderDetail.getPrice()));
+        order.setAmount(Double.parseDouble(orderDetail.getOrigQty()));
+        order.setDealAmount(Double.parseDouble(orderDetail.getExecutedQty()));
+        switch (orderDetail.getStatus()) {
+            case "NEW":
+            case "PARTIALLY_FILLED":
+                order.setStatus(OrderStatus.ORDER_STATE_PENDING);
+                break;
+            case "FILLED":
+                order.setStatus(OrderStatus.ORDER_STATE_FILLED);
+                break;
+            case "CANCELED":
+            case "PENDING_CANCEL":
+            case "REJECTED":
+            case "EXPIRED":
+                order.setStatus(OrderStatus.ORDER_STATE_CANCELED);
+                break;
+        }
+
+        return order;
     }
 
     @Override

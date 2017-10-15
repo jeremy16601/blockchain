@@ -17,6 +17,11 @@ public class STGrid implements IStrategy {
     }
 
     @Override
+    public void config(double... params) {
+
+    }
+
+    @Override
     public void onExec() {
 
     }

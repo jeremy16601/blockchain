@@ -26,6 +26,21 @@ public interface IExchangeAPIService {
 
 
     /**
+     * 设定交易对
+     *
+     * @param symbol 币安NEOBTC
+     */
+    void setSymbol(String symbol);
+
+    /**
+     * 得到当前的交易对
+     *
+     * @return 交易对
+     */
+    String getSymbol();
+
+
+    /**
      * K线历史数据
      *
      * @param period 时间周期
