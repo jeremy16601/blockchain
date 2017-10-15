@@ -6,6 +6,7 @@ import com.blockchain.robot.entity.Record;
 import com.blockchain.robot.entity.db.OrderRecord;
 import com.blockchain.robot.service.api.DingHttpClient;
 import com.blockchain.robot.service.IExchangeAPIService;
+import com.blockchain.robot.util.PriceFormatUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,13 +71,22 @@ public class STWaitForWindfalls implements IStrategy {
             double currentPrice = record.getClose();
             double openPrice = record.getOpen();
 
+//            logger.info(sdf.format(new Date(record.getTime()))+"服务器时间");
+
             //判断本地时间和交易所时间 不能有偏差
             Calendar serverTime = Calendar.getInstance();
             serverTime.setTime(new Date(record.getTime()));
 
             if (calendar.get(Calendar.MINUTE) != serverTime.get(Calendar.MINUTE)) {
-                String message = "与服务器时间不一致";
-                log(message);
+
+                long diffTime = calendar.get(Calendar.SECOND);
+                String message = "与API服务器时间不一致 \n当前服务器时间" + sdf.format(calendar.getTime()) + "\nAPI服务器时间:" + sdf.format(serverTime.getTime()) + "/n 相差" + diffTime + "s";
+                if (diffTime >= 4) {
+                    log(message);
+                } else {
+                    logger.info(message);
+                }
+
                 return;
             }
 
@@ -87,6 +97,8 @@ public class STWaitForWindfalls implements IStrategy {
             if (records.size() <= 5) {
                 //买入操作
                 double range = (currentPrice - openPrice) / openPrice;
+                //TODO 测试一下
+//                logger.info("range" + PriceFormatUtil.format(range) + ":" + (-rate));
                 if (range <= -rate) {
 
                     if (!tagBuy) {
@@ -100,9 +112,10 @@ public class STWaitForWindfalls implements IStrategy {
                         } catch (Exception e) {
                             e.printStackTrace();
                         } finally {
+//                            orderId = "123";
                             if (orderId != null) {
 
-                                String _time = sdf.format(new Date(record.getTime()));
+                                String _time = sdf.format(calendar.getTime());
 
                                 OrderRecord orderRecord = new OrderRecord();
                                 orderRecord.setTime(_time);
@@ -144,6 +157,7 @@ public class STWaitForWindfalls implements IStrategy {
                     } catch (Exception e) {
                         e.printStackTrace();
                     } finally {
+//                        orderId = "456";
                         if (orderId != null) {
                             orderRecord.setSellOrderId(orderId);
                             orderRecord.setSellPrice(sellPrice);

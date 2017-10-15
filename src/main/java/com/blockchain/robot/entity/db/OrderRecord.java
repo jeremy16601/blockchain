@@ -1,11 +1,14 @@
 package com.blockchain.robot.entity.db;
 
+import org.springframework.data.annotation.Id;
+
 /**
  * 订单记录 存数据库
  */
 public class OrderRecord {
 
-    private Long id;
+    @Id
+    private String id;
     private String time;
     private String exchange;
     private String strategy;
@@ -23,11 +26,11 @@ public class OrderRecord {
 
     private int status;//0 已下买单，未下卖单 1买单卖单都已下单
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 

@@ -192,7 +192,7 @@ public class RobotRunning {
     private void waitForWindfalls() {
         binanceExchange.setSymbol("BNBBTC");
         waitForWindfalls.setExchange(binanceExchange);
-        waitForWindfalls.config(50, 0.011);
+        waitForWindfalls.config(50, 0.001);
         waitForWindfalls.onExec();
     }
 
