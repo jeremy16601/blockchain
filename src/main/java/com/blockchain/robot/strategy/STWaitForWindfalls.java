@@ -16,6 +16,13 @@ import org.springframework.stereotype.Component;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+/**
+ * 守株待兔2.0 策略说明
+ * <p>
+ * 一分钟内，涨幅达到x%则卖出
+ * <p>
+ * 然后以卖出价为基准，跌幅x%则买入
+ */
 @Component("waitForWindfalls")
 public class STWaitForWindfalls implements IStrategy {
 
@@ -28,14 +35,13 @@ public class STWaitForWindfalls implements IStrategy {
     private LoggerUtil logger;//通知和日志
 
 
-    //    List<Double> buyPrice = new ArrayList<>();
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    Calendar calendar = Calendar.getInstance();
-    boolean tagBuy = false;//确保一个大周期内（一分钟）只能买一次
+    private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private Calendar calendar = Calendar.getInstance();
+    private boolean tagBuy = false;//确保一个大周期内（一分钟）只能买一次
 
     //策略配置
-    int amount = 50;//每次下单的数量
-    double rate = 0.011;//1.1%的涨跌幅度
+    private int amount = 1;//默认 每次下单的数量
+    private double rate = 0.020;//默认 2%的涨跌幅度
 
 
     @Override
@@ -71,8 +77,6 @@ public class STWaitForWindfalls implements IStrategy {
             double currentPrice = record.getClose();
             double openPrice = record.getOpen();
 
-//            logger.info(sdf.format(new Date(record.getTime()))+"服务器时间");
-
             //判断本地时间和交易所时间 不能有偏差
             Calendar serverTime = Calendar.getInstance();
             serverTime.setTime(new Date(record.getTime()));
@@ -93,26 +97,24 @@ public class STWaitForWindfalls implements IStrategy {
             //读取数据库中所有的记录
             List<OrderRecord> records = recordDao.findOrderUnFinish(exchange.getSymbol(), getName());
 
-            //如果未卖出的订单 多余5个 则停止买入
-            if (records.size() <= 5) {
+            //如果未买入的订单 多余5个 则停止买入
+            if (records.size() <= 8) {
                 //买入操作
                 double range = (currentPrice - openPrice) / openPrice;
-                //TODO 测试一下
-//                logger.info("range" + PriceFormatUtil.format(range) + ":" + (-rate));
-                if (range <= -rate) {
+
+                if (range >= rate) {
 
                     if (!tagBuy) {
                         tagBuy = true;
 
-                        double joinPrice = openPrice * (1 - rate);
+                        double sellPrice = openPrice * (1 + rate);
                         String orderId = null;
 
                         try {
-                            orderId = exchange.buy(joinPrice, amount);
+                            orderId = exchange.sell(sellPrice, amount);
                         } catch (Exception e) {
                             e.printStackTrace();
                         } finally {
-//                            orderId = "123";
                             if (orderId != null) {
 
                                 String _time = sdf.format(calendar.getTime());
@@ -122,12 +124,12 @@ public class STWaitForWindfalls implements IStrategy {
                                 orderRecord.setExchange(exchange.getName());
                                 orderRecord.setStrategy(getName());
                                 orderRecord.setSymbol(exchange.getSymbol());
-                                orderRecord.setBuyOrderId(orderId);
-                                orderRecord.setBuyPrice(joinPrice);
+                                orderRecord.setSellOrderId(orderId);
+                                orderRecord.setSellPrice(sellPrice);
                                 orderRecord.setStatus(0);
                                 recordDao.save(orderRecord);
 
-                                String message = "时间" + _time + "买入价格" + String.format("%.8f", joinPrice);
+                                String message = "时间" + _time + "卖出价格" + String.format("%.8f", sellPrice);
                                 logger.info(getClass(), message);
                             } else {
                                 logger.info(getClass(), "下单失败");
@@ -141,33 +143,28 @@ public class STWaitForWindfalls implements IStrategy {
             }
 
 
-            //卖出操作
+            //买出操作
             List<OrderRecord> records_sell = recordDao.findOrderUnFinish(exchange.getSymbol(), getName());
-            Iterator<OrderRecord> iterator = records_sell.iterator();
-            while (iterator.hasNext()) {
 
-                OrderRecord orderRecord = iterator.next();
+            for (OrderRecord orderRecord : records_sell) {
 
-                Double sellPrice = orderRecord.getBuyPrice() * (1 + rate);
-                if (currentPrice >= sellPrice) {
+                Double buyPrice = orderRecord.getSellPrice() * (1 - rate);
+                if (currentPrice <= buyPrice) {
                     String orderId = null;
 
                     try {
-                        orderId = exchange.sell(sellPrice, amount);
+                        orderId = exchange.buy(buyPrice, amount);
                     } catch (Exception e) {
                         e.printStackTrace();
                     } finally {
-//                        orderId = "456";
                         if (orderId != null) {
-                            orderRecord.setSellOrderId(orderId);
-                            orderRecord.setSellPrice(sellPrice);
-                            orderRecord.setEarnings(amount * (sellPrice - orderRecord.getBuyPrice()));
+                            orderRecord.setBuyOrderId(orderId);
+                            orderRecord.setBuyPrice(buyPrice);
+                            orderRecord.setEarnings(amount * (orderRecord.getSellPrice() - buyPrice));
                             orderRecord.setStatus(1);
                             recordDao.save(orderRecord);
 
-                            iterator.remove();
-
-                            String message = "时间" + sdf.format(new Date(record.getTime())) + "卖出价格" + String.format("%.8f", sellPrice);
+                            String message = "时间" + sdf.format(new Date(record.getTime())) + "买入价格" + String.format("%.8f", buyPrice);
                             logger.info(getClass(), message);
                         } else {
                             logger.info(getClass(), "下单失败");
@@ -183,5 +180,131 @@ public class STWaitForWindfalls implements IStrategy {
             logger.info(getClass(), "交易所，没有初始化");
         }
     }
+
+    // //1.0版本
+    //    @Override
+//    public void onExec() {
+//        if (exchange != null) {
+//
+//            calendar.setTime(new Date(System.currentTimeMillis()));
+//            int second = calendar.get(Calendar.SECOND);
+//            if (second == 0) {
+//                tagBuy = false;
+//            }
+//
+//            List<Record> recordList = exchange.getRecords("1m", 3);
+//            Record record = recordList.get(2);
+//            double currentPrice = record.getClose();
+//            double openPrice = record.getOpen();
+//
+////            logger.info(sdf.format(new Date(record.getTime()))+"服务器时间");
+//
+//            //判断本地时间和交易所时间 不能有偏差
+//            Calendar serverTime = Calendar.getInstance();
+//            serverTime.setTime(new Date(record.getTime()));
+//
+//            if (calendar.get(Calendar.MINUTE) != serverTime.get(Calendar.MINUTE)) {
+//
+//                long diffTime = calendar.get(Calendar.SECOND);
+//                String message = "与API服务器时间不一致 \n当前服务器时间" + sdf.format(calendar.getTime()) + "\nAPI服务器时间:" + sdf.format(serverTime.getTime()) + "/n 相差" + diffTime + "s";
+//                if (diffTime >= 4) {
+//                    logger.infoWithNotify(getClass(), message);
+//                } else {
+//                    logger.info(getClass(), message);
+//                }
+//
+//                return;
+//            }
+//
+//            //读取数据库中所有的记录
+//            List<OrderRecord> records = recordDao.findOrderUnFinish(exchange.getSymbol(), getName());
+//
+//            //如果未卖出的订单 多余5个 则停止买入
+//            if (records.size() <= 5) {
+//                //买入操作
+//                double range = (currentPrice - openPrice) / openPrice;
+//
+//                if (range <= -rate) {
+//
+//                    if (!tagBuy) {
+//                        tagBuy = true;
+//
+//                        double joinPrice = openPrice * (1 - rate);
+//                        String orderId = null;
+//
+//                        try {
+//                            orderId = exchange.buy(joinPrice, amount);
+//                        } catch (Exception e) {
+//                            e.printStackTrace();
+//                        } finally {
+//                            if (orderId != null) {
+//
+//                                String _time = sdf.format(calendar.getTime());
+//
+//                                OrderRecord orderRecord = new OrderRecord();
+//                                orderRecord.setTime(_time);
+//                                orderRecord.setExchange(exchange.getName());
+//                                orderRecord.setStrategy(getName());
+//                                orderRecord.setSymbol(exchange.getSymbol());
+//                                orderRecord.setBuyOrderId(orderId);
+//                                orderRecord.setBuyPrice(joinPrice);
+//                                orderRecord.setStatus(0);
+//                                recordDao.save(orderRecord);
+//
+//                                String message = "时间" + _time + "买入价格" + String.format("%.8f", joinPrice);
+//                                logger.info(getClass(), message);
+//                            } else {
+//                                logger.info(getClass(), "下单失败");
+//                            }
+//                        }
+//
+//
+//                    }
+//                }
+//
+//            }
+//
+//
+//            //卖出操作
+//            List<OrderRecord> records_sell = recordDao.findOrderUnFinish(exchange.getSymbol(), getName());
+//            Iterator<OrderRecord> iterator = records_sell.iterator();
+//            while (iterator.hasNext()) {
+//
+//                OrderRecord orderRecord = iterator.next();
+//
+//                Double sellPrice = orderRecord.getBuyPrice() * (1 + rate);
+//                if (currentPrice >= sellPrice) {
+//                    String orderId = null;
+//
+//                    try {
+//                        orderId = exchange.sell(sellPrice, amount);
+//                    } catch (Exception e) {
+//                        e.printStackTrace();
+//                    } finally {
+//                        if (orderId != null) {
+//                            orderRecord.setSellOrderId(orderId);
+//                            orderRecord.setSellPrice(sellPrice);
+//                            orderRecord.setEarnings(amount * (sellPrice - orderRecord.getBuyPrice()));
+//                            orderRecord.setStatus(1);
+//                            recordDao.save(orderRecord);
+//
+//                            iterator.remove();
+//
+//                            String message = "时间" + sdf.format(new Date(record.getTime())) + "卖出价格" + String.format("%.8f", sellPrice);
+//                            logger.info(getClass(), message);
+//                        } else {
+//                            logger.info(getClass(), "下单失败");
+//                        }
+//
+//                    }
+//
+//
+//                }
+//            }
+//
+//        } else {
+//            logger.info(getClass(), "交易所，没有初始化");
+//        }
+//    }
 
 }
