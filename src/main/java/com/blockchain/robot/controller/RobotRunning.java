@@ -10,6 +10,7 @@ import com.blockchain.robot.entity.db.OrderRecord;
 import com.blockchain.robot.service.IExchangeAPIService;
 import com.blockchain.robot.service.api.DingHttpClient;
 import com.blockchain.robot.strategy.IStrategy;
+import com.blockchain.robot.util.LoggerUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,8 +48,7 @@ public class RobotRunning {
 
     //4.日志及通知
     @Autowired
-    private DingHttpClient dingLogger;//通知和日志
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
+    private LoggerUtil logger;//通知和日志
 
 
 //    private Stack<BuyPoint> buyPointStack = new Stack<>();
@@ -221,7 +221,7 @@ public class RobotRunning {
             recordDao.save(orderRecord);
 
             if (orderRecord.getBuyStatus() == 1 && orderRecord.getSellStatus() == 1) {
-                log(orderRecord.getTime() + " " + orderRecord.getExchange() + " " + orderRecord.getSymbol() + "收益" + orderRecord.getEarnings());
+                logger.infoWithNotify(this.getClass(), orderRecord.getTime() + " " + orderRecord.getExchange() + " " + orderRecord.getSymbol() + "收益" + orderRecord.getEarnings());
             }
 
             try {
@@ -242,9 +242,5 @@ public class RobotRunning {
 //        waitForWindfalls2.onExec();
 //    }
 
-    private void log(String message) {
-        dingLogger.ding("4bc7f090cbae8f97ebe4cc9d5007b5cadbac4c3c3ad7c1ff19b9dd91c4617f06", DingMessage.newInstance(message));
-        logger.info(message);
-    }
 
 }

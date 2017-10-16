@@ -6,6 +6,7 @@ import com.blockchain.robot.entity.Record;
 import com.blockchain.robot.entity.db.OrderRecord;
 import com.blockchain.robot.service.api.DingHttpClient;
 import com.blockchain.robot.service.IExchangeAPIService;
+import com.blockchain.robot.util.LoggerUtil;
 import com.blockchain.robot.util.PriceFormatUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,8 +25,7 @@ public class STWaitForWindfalls implements IStrategy {
     private OrderRecordDao recordDao;//数据库操作
 
     @Autowired
-    private DingHttpClient dingLogger;//通知和日志
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
+    private LoggerUtil logger;//通知和日志
 
 
     //    List<Double> buyPrice = new ArrayList<>();
@@ -82,9 +82,9 @@ public class STWaitForWindfalls implements IStrategy {
                 long diffTime = calendar.get(Calendar.SECOND);
                 String message = "与API服务器时间不一致 \n当前服务器时间" + sdf.format(calendar.getTime()) + "\nAPI服务器时间:" + sdf.format(serverTime.getTime()) + "/n 相差" + diffTime + "s";
                 if (diffTime >= 4) {
-                    log(message);
+                    logger.infoWithNotify(getClass(), message);
                 } else {
-                    logger.info(message);
+                    logger.info(getClass(), message);
                 }
 
                 return;
@@ -128,9 +128,9 @@ public class STWaitForWindfalls implements IStrategy {
                                 recordDao.save(orderRecord);
 
                                 String message = "时间" + _time + "买入价格" + String.format("%.8f", joinPrice);
-                                log(message);
+                                logger.info(getClass(), message);
                             } else {
-                                logger.error("下单失败");
+                                logger.info(getClass(), "下单失败");
                             }
                         }
 
@@ -168,9 +168,9 @@ public class STWaitForWindfalls implements IStrategy {
                             iterator.remove();
 
                             String message = "时间" + sdf.format(new Date(record.getTime())) + "卖出价格" + String.format("%.8f", sellPrice);
-                            log(message);
+                            logger.info(getClass(), message);
                         } else {
-                            logger.error("下单失败");
+                            logger.info(getClass(), "下单失败");
                         }
 
                     }
@@ -180,13 +180,8 @@ public class STWaitForWindfalls implements IStrategy {
             }
 
         } else {
-            logger.error("交易所，没有初始化");
+            logger.info(getClass(), "交易所，没有初始化");
         }
     }
 
-
-    private void log(String message) {
-        dingLogger.ding("4bc7f090cbae8f97ebe4cc9d5007b5cadbac4c3c3ad7c1ff19b9dd91c4617f06", DingMessage.newInstance(message));
-        logger.info(message);
-    }
 }
