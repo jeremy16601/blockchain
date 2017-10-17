@@ -29,7 +29,7 @@ public class LoggerUtil {
         Logger logger = LoggerFactory.getLogger(cls);
         logger.info(message);
 
-        dingLogger.ding(toString(), DingMessage.newInstance(message));
+        dingLogger.ding(ding_token, DingMessage.newInstance(message));
     }
 
 }

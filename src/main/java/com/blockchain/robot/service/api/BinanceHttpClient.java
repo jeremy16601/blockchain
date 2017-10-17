@@ -84,7 +84,12 @@ public interface BinanceHttpClient {
     /**
      * 查询某个订单状态
      */
-    @RequestMapping(value = "/api/v3/order", method = RequestMethod.GET)
-    OrderDetail order_info(@RequestParam("symbol") String symbol, @RequestParam("orderId") String orderId, @RequestParam("timestamp") long timestamp);
+    @RequestMapping(value = "/api/v3/order", method = RequestMethod.GET, headers = {"Content-Type=application/x-www-form-urlencoded"})
+    OrderDetail order_info(@RequestHeader(value = "X-MBX-APIKEY") String api_key,
+                           @RequestParam("symbol") String symbol,
+                           @RequestParam("orderId") String orderId,
+                           @RequestParam("recvWindow") long recvWindow,
+                           @RequestParam("timestamp") long timestamp,
+                           @RequestParam("signature") String signature);
 
 }

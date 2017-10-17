@@ -177,8 +177,12 @@ public class BinanceExchangeService implements IExchangeAPIService {
     @Override
     public Order getOrder(String orderId) {
 
-        long time = System.currentTimeMillis();
-        OrderDetail orderDetail = binanceAPIService.order_info(symbol, orderId, time);
+        long timestamp = System.currentTimeMillis();
+        int recvWindow = 5000;
+        String parmas = "symbol=" + symbol + "&orderId=" + orderId + "&recvWindow=" + recvWindow + "&timestamp=" + timestamp;
+        String hash = SHA256.signature(api_secret, parmas);
+
+        OrderDetail orderDetail = binanceAPIService.order_info(api_key,symbol, orderId, recvWindow, timestamp, hash);
 
         Order order = new Order();
         order.setId(orderId);

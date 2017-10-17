@@ -148,8 +148,10 @@ public class STWaitForWindfalls implements IStrategy {
 
             for (OrderRecord orderRecord : records_sell) {
 
-                Double buyPrice = orderRecord.getSellPrice() * (1 - rate);
-                if (currentPrice <= buyPrice) {
+                double buyPrice = orderRecord.getSellPrice() / (1 + rate);//买入价格
+                double spreadPrice = orderRecord.getSellPrice() - buyPrice;//差价
+
+                if (currentPrice <= (buyPrice + spreadPrice * 0.3d)) {//提前下单
                     String orderId = null;
 
                     try {
