@@ -11,6 +11,7 @@ import com.blockchain.robot.service.IExchangeAPIService;
 import com.blockchain.robot.service.api.DingHttpClient;
 import com.blockchain.robot.strategy.IStrategy;
 import com.blockchain.robot.util.LoggerUtil;
+import com.blockchain.robot.util.PriceFormatUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -208,27 +209,49 @@ public class RobotRunning {
         //2.查询每个订单的状态，如果买卖订单全部成交，则通知
         for (OrderRecord orderRecord : recordList) {
 
-            Order buyOrder = binanceExchange.getOrder(orderRecord.getBuyOrderId());
-            Order sellOrder = binanceExchange.getOrder(orderRecord.getSellOrderId());
 
-            if (buyOrder != null && buyOrder.getStatus().equals(OrderStatus.ORDER_STATE_FILLED)) {
-                orderRecord.setBuyStatus(1);
+            boolean _isSave = false;
+
+            if (orderRecord.getBuyStatus() == 0) {
+                Order buyOrder = binanceExchange.getOrder(orderRecord.getBuyOrderId());
+                if (buyOrder != null && buyOrder.getStatus().equals(OrderStatus.ORDER_STATE_FILLED)) {
+                    orderRecord.setBuyStatus(1);
+                    _isSave = true;
+                }
             }
 
-            if (sellOrder != null && sellOrder.getStatus().equals(OrderStatus.ORDER_STATE_FILLED)) {
-                orderRecord.setSellStatus(1);
-            }
-            recordDao.save(orderRecord);
+            if (orderRecord.getSellStatus() == 0) {
+                Order sellOrder = binanceExchange.getOrder(orderRecord.getSellOrderId());
 
-            if (orderRecord.getBuyStatus() == 1 && orderRecord.getSellStatus() == 1) {
-                logger.infoWithNotify(this.getClass(), orderRecord.getTime() + " " + orderRecord.getExchange() + " " + orderRecord.getSymbol() + "收益" + orderRecord.getEarnings());
+                if (sellOrder != null && sellOrder.getStatus().equals(OrderStatus.ORDER_STATE_FILLED)) {
+                    orderRecord.setSellStatus(1);
+                    _isSave = true;
+                }
             }
+
+            if (_isSave) {
+
+                if (orderRecord.getBuyStatus() == 1 && orderRecord.getSellStatus() == 1) {
+                    orderRecord.setStatus(2);//订单结束
+
+                    logger.infoWithNotify(this.getClass(), orderRecord.getTime() + "\n"
+                            + orderRecord.getExchange() + " " + orderRecord.getSymbol() + "\n"
+                            + "买入价格" + PriceFormatUtil.format(orderRecord.getBuyPrice()) + "\n"
+                            + "卖出价格" + PriceFormatUtil.format(orderRecord.getSellPrice()) + "\n"
+                            + "收益   " + PriceFormatUtil.format(orderRecord.getEarnings()));
+                }
+
+
+                recordDao.save(orderRecord);
+            }
+
 
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+
         }
 
     }

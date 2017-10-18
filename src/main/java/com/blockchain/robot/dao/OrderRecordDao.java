@@ -50,7 +50,7 @@ public class OrderRecordDao {
 
     public List<OrderRecord> findAllByStrategy(String strategy) {
         Query query = new Query(
-                Criteria.where("strategy").is(strategy));
+                Criteria.where("strategy").is(strategy).and("status").is(1));
         return mongoTemplate.find(query, OrderRecord.class);
     }
 
