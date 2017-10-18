@@ -24,7 +24,7 @@ public class OrderRecord {
 
     private double earnings;
 
-    private int status;//0 已下买单，未下卖单 1买单卖单都已下单
+    private int status;//0 已下卖单，未下买单 1买单卖单都已下单 2卖买单都已成交（结束）
 
     public String getId() {
         return id;

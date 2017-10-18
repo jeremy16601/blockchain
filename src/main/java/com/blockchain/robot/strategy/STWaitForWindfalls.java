@@ -86,13 +86,14 @@ public class STWaitForWindfalls implements IStrategy {
                 long diffTime = calendar.get(Calendar.SECOND);
                 String message = "与API服务器时间不一致 \n当前服务器时间" + sdf.format(calendar.getTime()) + "\nAPI服务器时间:" + sdf.format(serverTime.getTime()) + "/n 相差" + diffTime + "s";
                 logger.info(getClass(), message);
+
                 return;
             }
 
             //读取数据库中所有的记录
             List<OrderRecord> records = recordDao.findOrderUnFinish(exchange.getSymbol(), getName());
 
-            //如果未买入的订单 多余5个 则停止买入
+            //如果未买入的订单 多余8个 则停止买入
             if (records.size() <= 8) {
                 //买入操作
                 double range = (currentPrice - openPrice) / openPrice;
