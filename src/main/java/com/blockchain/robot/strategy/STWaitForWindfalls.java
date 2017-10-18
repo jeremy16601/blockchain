@@ -85,12 +85,7 @@ public class STWaitForWindfalls implements IStrategy {
 
                 long diffTime = calendar.get(Calendar.SECOND);
                 String message = "与API服务器时间不一致 \n当前服务器时间" + sdf.format(calendar.getTime()) + "\nAPI服务器时间:" + sdf.format(serverTime.getTime()) + "/n 相差" + diffTime + "s";
-                if (diffTime >= 4) {
-                    logger.infoWithNotify(getClass(), message);
-                } else {
-                    logger.info(getClass(), message);
-                }
-
+                logger.info(getClass(), message);
                 return;
             }
 

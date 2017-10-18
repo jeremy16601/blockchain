@@ -113,7 +113,7 @@ public class BinanceExchangeService implements IExchangeAPIService {
         param.setTimeInForce("GTC");
         param.setQuantity(amount);
         param.setPrice(String.format("%.8f", price));
-        param.setRecvWindow(5000);
+        param.setRecvWindow(60000);
         param.setTimestamp(time);
 
         String hash = SHA256.signature(api_secret, param.toString());
@@ -149,7 +149,7 @@ public class BinanceExchangeService implements IExchangeAPIService {
         param.setTimeInForce("GTC");
         param.setQuantity(amount);
         param.setPrice(String.format("%.8f", price));
-        param.setRecvWindow(5000);
+        param.setRecvWindow(60000);
         param.setTimestamp(time);
 
         String hash = SHA256.signature(api_secret, param.toString());
@@ -178,7 +178,7 @@ public class BinanceExchangeService implements IExchangeAPIService {
     public Order getOrder(String orderId) {
 
         long timestamp = System.currentTimeMillis();
-        int recvWindow = 5000;
+        int recvWindow = 60000;
         String parmas = "symbol=" + symbol + "&orderId=" + orderId + "&recvWindow=" + recvWindow + "&timestamp=" + timestamp;
         String hash = SHA256.signature(api_secret, parmas);
 
