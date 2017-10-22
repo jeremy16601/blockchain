@@ -69,7 +69,7 @@ public interface BinanceHttpClient {
     /**
      * 下单(BUY SELL)
      */
-    @RequestMapping(value = "/api/v3/order", method = RequestMethod.POST, headers = {"Content-Type=application/x-www-form-urlencoded"})
+    @RequestMapping(value = "/api/v3/order/test", method = RequestMethod.POST, headers = {"Content-Type=application/x-www-form-urlencoded"})
     NewOrder new_order(@RequestHeader(value = "X-MBX-APIKEY") String api_key,
                        @RequestParam("symbol") String symbol,
                        @RequestParam("side") String side,

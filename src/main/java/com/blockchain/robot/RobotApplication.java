@@ -12,21 +12,21 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableDiscoveryClient
 @EnableFeignClients
 @EnableScheduling
-//public class RobotApplication {
-//
-//    public static void main(String[] args) {
-//        SpringApplication.run(RobotApplication.class, args);
-//    }
-//
-//}
-public class RobotApplication extends SpringBootServletInitializer{
+public class RobotApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(RobotApplication.class, args);
     }
 
-    @Override
-    protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
-        return builder.sources(RobotApplication.class);
-    }
 }
+//public class RobotApplication extends SpringBootServletInitializer{
+//
+//    public static void main(String[] args) {
+//        SpringApplication.run(RobotApplication.class, args);
+//    }
+//
+//    @Override
+//    protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
+//        return builder.sources(RobotApplication.class);
+//    }
+//}
