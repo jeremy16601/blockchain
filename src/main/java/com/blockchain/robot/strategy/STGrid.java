@@ -7,6 +7,7 @@ import com.blockchain.robot.entity.Record;
 import com.blockchain.robot.entity.db.OrderRecordGrid;
 import com.blockchain.robot.service.IExchangeAPIService;
 import com.blockchain.robot.util.LoggerUtil;
+import com.blockchain.robot.util.PriceFormatUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -58,7 +59,7 @@ public class STGrid implements IStrategy {
             mBtcAmount = params[3];
             mInitPrice = params[4];
 
-            mStepPrice = (mMaxPrice - mMinPrice) / mSteps;
+            mStepPrice = PriceFormatUtil.formatDouble5((mMaxPrice - mMinPrice) / mSteps);
         }
     }
 
@@ -80,10 +81,10 @@ public class STGrid implements IStrategy {
                 orderRecord.setExchange(exchange.getName());
                 orderRecord.setStrategy(getName());
                 orderRecord.setSymbol(exchange.getSymbol());
-                orderRecord.setGradePrice(mInitPrice);
-                orderRecord.setBuyPrice(mInitPrice - mStepPrice);
+                orderRecord.setGradePrice(PriceFormatUtil.formatDouble5(mInitPrice));
+                orderRecord.setBuyPrice(PriceFormatUtil.formatDouble5(mInitPrice - mStepPrice));
                 orderRecord.setBuyStatus(-1);
-                orderRecord.setSellPrice(mInitPrice + mStepPrice);
+                orderRecord.setSellPrice(PriceFormatUtil.formatDouble5(mInitPrice + mStepPrice));
                 orderRecord.setSellStatus(-1);
                 orderRecord.setStatus(0);
                 recordDao.save(orderRecord);
@@ -101,7 +102,7 @@ public class STGrid implements IStrategy {
                     } catch (Exception e) {
                         e.printStackTrace();
                     } finally {
-                        orderId = "123";
+//                        orderId = "123";
                         if (orderId != null) {
                             orderRecord.setBuyOrderId(orderId);
                             orderRecord.setBuyStatus(0);
@@ -119,7 +120,7 @@ public class STGrid implements IStrategy {
                     } catch (Exception e) {
                         e.printStackTrace();
                     } finally {
-                        orderId = "123";
+//                        orderId = "123";
                         if (orderId != null) {
                             orderRecord.setSellOrderId(orderId);
                             orderRecord.setSellStatus(0);
@@ -133,43 +134,69 @@ public class STGrid implements IStrategy {
 
                 //检测买单是否成交
                 if (orderRecord.getBuyOrderId() != null) {
-                    if(orderRecord.getBuyPrice()>=currentPrice){
-                        orderRecord.setBuyStatus(1);
-                        recordDao.save(orderRecord);
-                        _isBought = true;
-                    }
 
-//                    Order buyOrder = exchange.getOrder(orderRecord.getBuyOrderId());
-//                    if (buyOrder != null && buyOrder.getStatus().equals(OrderStatus.ORDER_STATE_FILLED)) {
+//                    if (orderRecord.getBuyPrice() >= currentPrice) {
 //                        orderRecord.setBuyStatus(1);
 //                        recordDao.save(orderRecord);
 //                        _isBought = true;
 //                    }
+
+
+                    Order buyOrder = exchange.getOrder(orderRecord.getBuyOrderId());
+                    if (buyOrder != null && buyOrder.getStatus().equals(OrderStatus.ORDER_STATE_FILLED)) {
+                        orderRecord.setBuyStatus(1);
+                        recordDao.save(orderRecord);
+                        _isBought = true;
+
+                        try {
+                            exchange.cancelOrder(orderRecord.getSellOrderId());
+                        } catch (Exception e) {
+                            logger.infoWithNotify(this.getClass(), "警告：取消卖单失败" + "\n"
+                                    + "订单号：" + orderRecord.getSellOrderId());
+                        }
+
+                        logger.infoWithNotify(this.getClass(), "提示：" + "\n"
+                                + orderRecord.getTime() + "\n"
+                                + orderRecord.getExchange() + " " + orderRecord.getSymbol() + "\n"
+                                + "买入价格" + PriceFormatUtil.format(orderRecord.getBuyPrice()));
+
+                    }
                 }
 
                 //检测卖单是否成交
                 if (orderRecord.getSellOrderId() != null) {
-
-                    if(orderRecord.getSellPrice()<=currentPrice){
-                        orderRecord.setSellStatus(1);
-                        recordDao.save(orderRecord);
-                        _isSold = true;
-
-                        logger.infoWithNotify(STGrid.class, "卖单成交，预计收益" +
-                                (orderRecord.getSellPrice() - orderRecord.getGradePrice()) * (mBtcAmount / orderRecord.getGradePrice())
-                        );
-                    }
-
-//                    Order sellOrder = exchange.getOrder(orderRecord.getSellOrderId());
-//                    if (sellOrder != null && sellOrder.getStatus().equals(OrderStatus.ORDER_STATE_FILLED)) {
+//                    if (orderRecord.getSellPrice() <= currentPrice) {
 //                        orderRecord.setSellStatus(1);
 //                        recordDao.save(orderRecord);
 //                        _isSold = true;
 //
-//                        logger.infoWithNotify(STGrid.class, "卖单成交，预计收益" +
-//                                (orderRecord.getSellPrice() - orderRecord.getGradePrice()) * (mBtcAmount / orderRecord.getGradePrice())
-//                        );
+//                        earning += (orderRecord.getSellPrice() - orderRecord.getGradePrice()) * (mBtcAmount / orderRecord.getGradePrice());
+//                        logger.info(STGrid.class, "卖单成交，预计收益" +PriceFormatUtil.format(earning));
 //                    }
+                    Order sellOrder = exchange.getOrder(orderRecord.getSellOrderId());
+                    if (sellOrder != null && sellOrder.getStatus().equals(OrderStatus.ORDER_STATE_FILLED)) {
+                        orderRecord.setSellStatus(1);
+
+                        double earning = (orderRecord.getSellPrice() - orderRecord.getGradePrice()) * (mBtcAmount / orderRecord.getGradePrice());
+                        orderRecord.setEarnings(earning);
+                        recordDao.save(orderRecord);
+                        _isSold = true;
+
+                        try {
+                            exchange.cancelOrder(orderRecord.getBuyOrderId());
+                        } catch (Exception e) {
+                            logger.infoWithNotify(this.getClass(), "警告：取消买单失败" + "\n"
+                                    + "订单号：" + orderRecord.getBuyOrderId());
+                        }
+
+
+                        logger.infoWithNotify(this.getClass(), "提示：" + "\n"
+                                + orderRecord.getTime() + "\n"
+                                + orderRecord.getExchange() + " " + orderRecord.getSymbol() + "\n"
+                                + "卖出价格" + PriceFormatUtil.format(orderRecord.getBuyPrice()) + "\n"
+                                + "收益" + PriceFormatUtil.format(earning));
+
+                    }
                 }
 
                 if (_isSold || _isBought) {
@@ -188,23 +215,22 @@ public class STGrid implements IStrategy {
 
                     if (_isBought) {
                         _order.setGradePrice(orderRecord.getBuyPrice());
-                        _order.setBuyPrice(orderRecord.getBuyPrice() - mStepPrice);
+                        _order.setBuyPrice(PriceFormatUtil.formatDouble5(orderRecord.getBuyPrice() - mStepPrice));
                         _order.setBuyStatus(-1);
-                        _order.setSellPrice(orderRecord.getBuyPrice() + mStepPrice);
+                        _order.setSellPrice(PriceFormatUtil.formatDouble5(orderRecord.getBuyPrice() + mStepPrice));
                         _order.setSellStatus(-1);
                     }
                     if (_isSold) {
                         _order.setGradePrice(orderRecord.getSellPrice());
-                        _order.setBuyPrice(orderRecord.getSellPrice() - mStepPrice);
+                        _order.setBuyPrice(PriceFormatUtil.formatDouble5(orderRecord.getSellPrice() - mStepPrice));
                         _order.setBuyStatus(-1);
-                        _order.setSellPrice(orderRecord.getSellPrice() + mStepPrice);
+                        _order.setSellPrice(PriceFormatUtil.formatDouble5(orderRecord.getSellPrice() + mStepPrice));
                         _order.setSellStatus(-1);
                     }
 
                     _order.setStatus(0);
                     recordDao.save(_order);
-
-                    logger.infoWithNotify(STGrid.class, "执行一下个档位");
+                    logger.info(STGrid.class, "执行一下个档位");
                 }
 
             }
@@ -213,10 +239,10 @@ public class STGrid implements IStrategy {
 
     }
 
-
-    private double currentPrice;
-
-    public void setTestPrice(double price) {
-        currentPrice = price;
-    }
+//    private double currentPrice;
+//    private double earning;
+//
+//    public void setTestPrice(double price) {
+//        currentPrice = price;
+//    }
 }

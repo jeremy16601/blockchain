@@ -55,31 +55,33 @@ public class RobotRunning {
     /**
      * 测试
      */
-    @Scheduled(fixedRate = 360000)
-    private void strategyTest() {
-
-        List<Record> recordList = binanceExchange.getRecords("1h", 500);
-
-        for (Record record : recordList) {
-
-            double currentPrice = record.getClose();
-
-            binanceExchange2.setSymbol("NEOBTC");
-            gridStrategy.setExchange(binanceExchange2);
-            gridStrategy.config(0.003, 0.01, 28, 0.03, 0.004750);
-
-            ((STGrid) gridStrategy).setTestPrice(currentPrice);
-            gridStrategy.onExec();
-
-        }
-
-    }
+//    @Scheduled(fixedRate = 360000)
+//    private void strategyTest() {
+//
+//        binanceExchange2.setSymbol("NEOBTC");
+//        List<Record> recordList = binanceExchange2.getRecords("1h", 240);
+//        logger.info(RobotRunning.class,"有数据"+recordList.size());
+//
+//        for (Record record : recordList) {
+//
+//            double currentPrice = record.getClose();
+//
+//            binanceExchange2.setSymbol("NEOBTC");
+//            gridStrategy.setExchange(binanceExchange2);
+//            gridStrategy.config(0.0035, 0.008, 9, 0.094, 0.004750);
+//
+//            ((STGrid) gridStrategy).setTestPrice(currentPrice);
+//            gridStrategy.onExec();
+//
+//        }
+//
+//    }
 
 
     /**
      * 守株待兔
      */
-//    @Scheduled(cron = "0/2 * * * * ?")
+    @Scheduled(cron = "0/2 * * * * ?")
     private void waitForWindfalls() {
         binanceExchange.setSymbol("BNBBTC");
         waitForWindfalls.setExchange(binanceExchange);
@@ -90,7 +92,7 @@ public class RobotRunning {
     /**
      * 统一处理所有的订单，并通知给用户（暂时先给 守株待兔使用）
      */
-//    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 60000)
     private void orderHandle() {
 
         //1.查询所有'守株待兔'策略的订单
@@ -147,13 +149,13 @@ public class RobotRunning {
     }
 
 
-    //    @Scheduled(cron = "0/30 * * * * ?")
-    private void gridStrategyTask() {
-        binanceExchange2.setSymbol("NEOBTC");
-        gridStrategy.setExchange(binanceExchange2);
-        gridStrategy.config(0.003, 0.01, 28, 0.03, 0.004750);
-        gridStrategy.onExec();
-    }
+//    @Scheduled(cron = "0/30 * * * * ?")
+//    private void gridStrategyTask() {
+//        binanceExchange2.setSymbol("NEOBTC");
+//        gridStrategy.setExchange(binanceExchange2);
+//        gridStrategy.config(0.003, 0.01, 28, 0.03, 0.004750);
+//        gridStrategy.onExec();
+//    }
 
 
 }

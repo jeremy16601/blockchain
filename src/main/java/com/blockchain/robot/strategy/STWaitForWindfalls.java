@@ -70,6 +70,9 @@ public class STWaitForWindfalls implements IStrategy {
             int second = calendar.get(Calendar.SECOND);
             if (second == 0) {
                 tagBuy = false;
+                //获取最近
+
+
             }
 
             List<Record> recordList = exchange.getRecords("1m", 3);
