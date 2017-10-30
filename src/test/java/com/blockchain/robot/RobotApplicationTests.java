@@ -1,6 +1,8 @@
 package com.blockchain.robot;
 
+import com.blockchain.robot.entity.Record;
 import com.blockchain.robot.entity.binance.TwentyFourHoursPrice;
+import com.blockchain.robot.service.BinanceExchangeService;
 import com.blockchain.robot.service.api.BinanceHttpClient;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -8,23 +10,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.List;
+
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class RobotApplicationTests {
 
     @Autowired
-    private BinanceHttpClient binanceAPIService;
+    private BinanceExchangeService binanceExchange;
 
     @Test
     public void contextLoads() {
 
-        TwentyFourHoursPrice response = binanceAPIService.price_statistics_24hr("NEOBTC");
+        List<Record> allRecords = binanceExchange.getRecords("1d", 500);
 
-        String result = "NEO最新价格" + response.getLastPrice() + "最高价格" + response.getHighPrice() + "最低价格" + response.getLowPrice()
-                + "跌幅" + response.getPriceChangePercent() + "平均" + response.getWeightedAvgPrice();
+        for (int i = 26; i < allRecords.size(); i++) {
 
-        System.out.println(result);
-
+        }
     }
 
 }
